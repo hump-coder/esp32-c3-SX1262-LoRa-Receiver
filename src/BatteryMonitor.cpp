@@ -33,10 +33,12 @@ BatteryMonitor::BatteryMonitor(uint8_t adcPin, float r1, float r2, float vRef, i
 float BatteryMonitor::takeSingleReading() {
     long sum = 0;
     const int quickSamples = 5;
+    unsigned long now = millis();
+    bool doPrint = _debug && (now - _lastDebugPrint >= 1000);
     for (int i = 0; i < quickSamples; i++) {
         int raw = analogRead(_adcPin);
         sum += raw;
-        if (_debug) {
+        if (doPrint) {
             Serial.printf("adc[%d]=%d\n", i, raw);
         }
         delay(3);
@@ -44,7 +46,7 @@ float BatteryMonitor::takeSingleReading() {
     _lastRawAvg = sum / (float)quickSamples;
     float vOut = _lastRawAvg * (_vRef / 4095.0);
     float vBat = vOut * ((_r1 + _r2) / _r2);
-    if (_debug) {
+    if (doPrint) {
         Serial.printf("avgRaw: %.1f vOut: %.3f vBat: %.3f\n", _lastRawAvg, vOut, vBat);
     }
     return vBat;
