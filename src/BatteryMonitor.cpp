@@ -1,4 +1,5 @@
 #include "BatteryMonitor.h"
+#include <esp32-hal-adc.h>
 
 // Global instance
 BatteryMonitor battery(2, 27000.0, 100000.0, 3.3, 20);
@@ -54,6 +55,7 @@ float BatteryMonitor::takeSingleReading() {
 
 void BatteryMonitor::begin() {
     analogReadResolution(12);
+    analogSetPinAttenuation(_adcPin, ADC_11db);
     for (int i = 0; i < _numSamples; i++) {
         _sampleBuffer[i] = takeSingleReading();
     }
