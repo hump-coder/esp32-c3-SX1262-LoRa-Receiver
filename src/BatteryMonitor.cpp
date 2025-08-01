@@ -50,7 +50,8 @@ void BatteryMonitor::begin() {
 }
 
 void BatteryMonitor::update() {
-    _sampleBuffer[_sampleIndex] = takeSingleReading();
+    float reading = takeSingleReading();
+    _sampleBuffer[_sampleIndex] = reading;
     _sampleIndex = (_sampleIndex + 1) % _numSamples;
     if (_sampleIndex == 0) _bufferFilled = true;
 
@@ -73,6 +74,13 @@ void BatteryMonitor::update() {
     }
 
     updateDailyStats();
+
+    float voltage = getVoltage();
+    float pctLinear = getPercentage();
+    float pctCurve = getPercentageCurve();
+
+    Serial.printf("Battery reading: %.2f V, voltage: %.2f V, %%: %.1f, scaled %%: %.1f\n",
+                  reading, voltage, pctLinear, pctCurve);
 }
 
 float BatteryMonitor::getVoltage() const {
