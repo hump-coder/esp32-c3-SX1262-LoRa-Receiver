@@ -11,7 +11,7 @@ enum ChargeState {
 
 class BatteryMonitor {
 public:
-    BatteryMonitor(uint8_t adcPin, float r1, float r2, float vRef, int numSamples);
+    BatteryMonitor(uint8_t adcPin, float r1, float r2, float vRef, int numSamples, float calibrationFactor = 1.0);
 
     void begin();
     void update();
@@ -55,6 +55,9 @@ public:
 
     // Debug control
     void enableDebug(bool enable);
+
+    // Calibration
+    void setCalibrationFactor(float factor);
 
 private:
     float takeSingleReading();
@@ -105,6 +108,7 @@ private:
     bool _debug;
     unsigned long _lastDebugPrint;
     float _lastRawAvg;
+    float _calibrationFactor;
 };
 
 extern BatteryMonitor battery;
