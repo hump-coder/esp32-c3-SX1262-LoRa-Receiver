@@ -1,8 +1,9 @@
 #include "BatteryMonitor.h"
 #include <esp32-hal-adc.h>
+#include "device-config.h"
 
 // Global instance
-BatteryMonitor battery(2, 27000.0, 100000.0, 3.3, 20);
+BatteryMonitor battery(BATTERY_VOLTAGE_PIN, 27000.0, 100000.0, 3.3, 20);
 
 struct VoltageSOC {
     float voltage;
@@ -57,7 +58,7 @@ void BatteryMonitor::begin() {
     pinMode(_adcPin, INPUT);
     analogReadResolution(12);
     adcAttachPin(_adcPin);
-    analogSetPinAttenuation(_adcPin, ADC_11db);
+    analogSetPinAttenuation(_adcPin, ADC_ATTENDB_MAX);
     for (int i = 0; i < _numSamples; i++) {
         _sampleBuffer[i] = takeSingleReading();
     }

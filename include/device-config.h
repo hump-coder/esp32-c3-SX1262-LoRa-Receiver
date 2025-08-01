@@ -53,7 +53,7 @@
 #define OFF_RETRY_COUNT                             3
 
 // Analog pin used to measure battery voltage
-#define BATTERY_VOLTAGE_PIN 35
+#define BATTERY_VOLTAGE_PIN 2
 
 // Digital pin indicating charge status (HIGH when charging)
 #define CHARGE_STATUS_PIN 34
