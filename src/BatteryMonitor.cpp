@@ -25,7 +25,8 @@ BatteryMonitor::BatteryMonitor(uint8_t adcPin, float r1, float r2, float vRef, i
       _ucVoltage(true), _ucLinearPct(true), _ucCurvePct(true), _ucState(true),
       _dailyMinV(99.0), _dailyMaxV(0.0), _dailySumV(0.0),
       _dailyMinSOC(100.0), _dailyMaxSOC(0.0), _dailySumSOC(0.0),
-      _dailyCount(0) {
+      _dailyCount(0),
+      _debug(false), _lastDebugPrint(0), _lastRawAvg(0.0f) {
     _sampleBuffer = new float[_numSamples];
 }
 
@@ -33,12 +34,20 @@ float BatteryMonitor::takeSingleReading() {
     long sum = 0;
     const int quickSamples = 5;
     for (int i = 0; i < quickSamples; i++) {
-        sum += analogRead(_adcPin);
+        int raw = analogRead(_adcPin);
+        sum += raw;
+        if (_debug) {
+            Serial.printf("adc[%d]=%d\n", i, raw);
+        }
         delay(3);
     }
-    float avgRaw = sum / (float)quickSamples;
-    float vOut = avgRaw * (_vRef / 4095.0);
-    return vOut * ((_r1 + _r2) / _r2);
+    _lastRawAvg = sum / (float)quickSamples;
+    float vOut = _lastRawAvg * (_vRef / 4095.0);
+    float vBat = vOut * ((_r1 + _r2) / _r2);
+    if (_debug) {
+        Serial.printf("avgRaw: %.1f vOut: %.3f vBat: %.3f\n", _lastRawAvg, vOut, vBat);
+    }
+    return vBat;
 }
 
 void BatteryMonitor::begin() {
@@ -47,6 +56,10 @@ void BatteryMonitor::begin() {
         _sampleBuffer[i] = takeSingleReading();
     }
     _bufferFilled = true;
+}
+
+void BatteryMonitor::enableDebug(bool enable) {
+    _debug = enable;
 }
 
 void BatteryMonitor::update() {
@@ -79,8 +92,12 @@ void BatteryMonitor::update() {
     float pctLinear = getPercentage();
     float pctCurve = getPercentageCurve();
 
-    Serial.printf("Battery reading: %.2f V, voltage: %.2f V, %%: %.1f, scaled %%: %.1f\n",
-                  reading, voltage, pctLinear, pctCurve);
+    unsigned long now = millis();
+    if (_debug && now - _lastDebugPrint >= 1000) {
+        Serial.printf("rawAvg: %.1f reading: %.2f V, voltage: %.2f V, %%: %.1f, scaled %%: %.1f\n",
+                      _lastRawAvg, reading, voltage, pctLinear, pctCurve);
+        _lastDebugPrint = now;
+    }
 }
 
 float BatteryMonitor::getVoltage() const {

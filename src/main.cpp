@@ -17,6 +17,7 @@ void setup() {
 
     // display.setup();
     battery.begin();
+    battery.enableDebug(true);
 
 
     device = new Receiver();
