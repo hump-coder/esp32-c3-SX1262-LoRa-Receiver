@@ -7,7 +7,8 @@
 // non-linear region near 0 and full scale (~100-3900 counts).
 // 68k on the high side and 100k on the low side give about 2.5 V
 // at 4.2 V battery voltage when using 11 dB attenuation.
-BatteryMonitor battery(BATTERY_VOLTAGE_PIN, 68000.0, 100000.0, 3.3, 20);
+// Last parameter is a calibration factor to account for ADC inaccuracies.
+BatteryMonitor battery(BATTERY_VOLTAGE_PIN, 68000.0, 100000.0, 3.3, 20, 1.013);
 
 struct VoltageSOC {
     float voltage;
@@ -22,7 +23,7 @@ static const VoltageSOC liIonCurve[] = {
     {3.00, 0}
 };
 
-BatteryMonitor::BatteryMonitor(uint8_t adcPin, float r1, float r2, float vRef, int numSamples)
+BatteryMonitor::BatteryMonitor(uint8_t adcPin, float r1, float r2, float vRef, int numSamples, float calibrationFactor)
     : _adcPin(adcPin), _r1(r1), _r2(r2), _vRef(vRef), _numSamples(numSamples),
       _sampleIndex(0), _bufferFilled(false),
       _lowThreshold(3.2), _highThreshold(4.1),
@@ -32,7 +33,8 @@ BatteryMonitor::BatteryMonitor(uint8_t adcPin, float r1, float r2, float vRef, i
       _dailyMinV(99.0), _dailyMaxV(0.0), _dailySumV(0.0),
       _dailyMinSOC(100.0), _dailyMaxSOC(0.0), _dailySumSOC(0.0),
       _dailyCount(0),
-      _debug(false), _lastDebugPrint(0), _lastRawAvg(0.0f) {
+      _debug(false), _lastDebugPrint(0), _lastRawAvg(0.0f),
+      _calibrationFactor(calibrationFactor) {
     _sampleBuffer = new float[_numSamples];
 }
 
@@ -54,7 +56,7 @@ float BatteryMonitor::takeSingleReading() {
     }
     _lastRawAvg = sumRaw / (float)quickSamples;
     float vOut = (sumMilli / (float)quickSamples) / 1000.0;
-    float vBat = vOut * ((_r1 + _r2) / _r2);
+    float vBat = vOut * ((_r1 + _r2) / _r2) * _calibrationFactor;
     if (doPrint) {
         Serial.printf("avgRaw: %.1f vOut: %.3f vBat: %.3f\n", _lastRawAvg, vOut, vBat);
     }
@@ -74,6 +76,10 @@ void BatteryMonitor::begin() {
 
 void BatteryMonitor::enableDebug(bool enable) {
     _debug = enable;
+}
+
+void BatteryMonitor::setCalibrationFactor(float factor) {
+    _calibrationFactor = factor;
 }
 
 void BatteryMonitor::update() {
