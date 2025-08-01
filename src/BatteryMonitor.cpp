@@ -3,7 +3,11 @@
 #include "device-config.h"
 
 // Global instance
-BatteryMonitor battery(BATTERY_VOLTAGE_PIN, 27000.0, 100000.0, 3.3, 20);
+// Use a divider that keeps the ADC reading well away from the
+// non-linear region near 0 and full scale (~100-3900 counts).
+// 68k on the high side and 100k on the low side give about 2.5 V
+// at 4.2 V battery voltage when using 11 dB attenuation.
+BatteryMonitor battery(BATTERY_VOLTAGE_PIN, 68000.0, 100000.0, 3.3, 20);
 
 struct VoltageSOC {
     float voltage;
