@@ -53,6 +53,9 @@ public:
     String getDailyStatsJSON() const;
     String getDailyStatsCompact() const;
 
+    // Debug control
+    void enableDebug(bool enable);
+
 private:
     float takeSingleReading();
     float getMovingAverage() const;
@@ -97,6 +100,11 @@ private:
     float _dailySumSOC;
 
     unsigned long _dailyCount;
+
+    // Debug helpers
+    bool _debug;
+    unsigned long _lastDebugPrint;
+    float _lastRawAvg;
 };
 
 extern BatteryMonitor battery;
