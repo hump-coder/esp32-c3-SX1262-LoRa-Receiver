@@ -54,7 +54,9 @@ float BatteryMonitor::takeSingleReading() {
 }
 
 void BatteryMonitor::begin() {
+    pinMode(_adcPin, INPUT);
     analogReadResolution(12);
+    adcAttachPin(_adcPin);
     analogSetPinAttenuation(_adcPin, ADC_11db);
     for (int i = 0; i < _numSamples; i++) {
         _sampleBuffer[i] = takeSingleReading();
